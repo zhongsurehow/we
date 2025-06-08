@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Subtitle 32-33 Animation</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column; /* Stack text and animation area */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: sans-serif;
+            background-color: #eef1f5; /* Light, calm background */
+            color: #333;
+            margin: 0;
+            overflow: hidden;
+        }
+        #main-container {
+            text-align: center;
+            position: relative;
+        }
+        .scene-text { /* General styling for text elements */
+            font-size: 1.8em;
+            line-height: 1.4;
+            margin-bottom: 15px;
+            opacity: 0; /* Most start hidden */
+        }
+        #text-good-model { opacity: 1; margin-bottom: 10px; font-size: 1.6em; color: #555;} /* Initial visible text */
+
+        #animation-area {
+            position: relative;
+            width: 320px; /* Slightly larger to accommodate border */
+            height: 320px;
+            margin: 10px auto 20px; /* Auto margins for centering */
+            /* border: 1px solid black; */ /* For debugging */
+        }
+        #symbiotic-circle {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 280px; /* Diameter of the circle path */
+            height: 280px;
+            border: 3px dashed #a2d2ff; /* Light blue dashed circle */
+            border-radius: 50%;
+            transform: translate(-50%, -50%); /* Center the circle */
+        }
+        #circle-members-container { /* Needed if emojis are absolutely positioned within animation-area */
+            position: absolute;
+            top:0; left:0; width:100%; height:100%;
+        }
+        .circle-member-emoji, #competitor-emoji-wrapper {
+            position: absolute; /* Positioned by JS */
+            font-size: 2.2em; /* Emoji size */
+            opacity: 0;
+            transform: scale(0.5); /* Initial state for animation */
+            width: 40px; height: 40px; /* Consistent size for positioning */
+            display: flex; justify-content: center; align-items: center;
+        }
+        #competitor-emoji-wrapper {
+             /* Specific styling if different from members */
+        }
+        #connection-lines-svg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none; /* Allow interaction with elements below */
+            z-index: -1; /* Behind emojis if emojis have background */
+        }
+        #connection-lines-svg line {
+            stroke: #77aaff; /* Softer blue for lines */
+            stroke-width: 2px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div id="main-container">
+        <p class="scene-text" id="text-good-model">好的模式...</p>
+        <div id="animation-area">
+            <div id="symbiotic-circle"></div>
+            <div id="circle-members-container">
+                <!-- Circle member emojis will be added here by JS -->
+            </div>
+            <span id="competitor-emoji-wrapper"></span> <!-- Competitor emoji here -->
+            <svg id="connection-lines-svg"></svg>
+        </div>
+        <p class="scene-text" id="text-competitor-joins">...能让竞争对手都想加入...</p>
+        <p class="scene-text" id="text-your-circle">...你的 "共生圈"。</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const textGoodModel = document.getElementById('text-good-model');
+            const animationArea = document.getElementById('animation-area');
+            const circleContainer = document.getElementById('circle-members-container');
+            const competitorWrapper = document.getElementById('competitor-emoji-wrapper');
+            const symbioticCircleEl = document.getElementById('symbiotic-circle');
+            const linesSvg = document.getElementById('connection-lines-svg');
+            const textCompetitorJoins = document.getElementById('text-competitor-joins');
+            const textYourCircle = document.getElementById('text-your-circle');
+
+            const memberEmojis = ['😊', '🤝', '🌱', '💡']; // Initial members
+            const numMembers = memberEmojis.length;
+            const radius = 140; // Radius of the symbiotic circle path
+            const centerX = animationArea.offsetWidth / 2;
+            const centerY = animationArea.offsetHeight / 2;
+            const memberElements = [];
+
+            const tl = anime.timeline({
+                easing: 'easeOutExpo',
+                duration: 800 // Default duration
+            });
+
+            tl.add({ // Initial text fade slightly or move
+                targets: textGoodModel,
+                opacity: [1, 0.7],
+                translateY: [0, -5],
+                duration: 1000
+            });
+
+            // Animate "能让竞争对手都想加入" text
+            tl.add({ targets: textCompetitorJoins, opacity: [0,1], translateY:[-10, 0] }, '-=500');
+
+            // Establish Circle Members
+            memberEmojis.forEach((emoji, i) => {
+                const angle = (i / numMembers) * 2 * Math.PI;
+                const x = centerX + radius * Math.cos(angle) - 20; // -20 to center 40px emoji
+                const y = centerY + radius * Math.sin(angle) - 20;
+
+                const el = document.createElement('span');
+                el.classList.add('circle-member-emoji');
+                el.textContent = emoji;
+                el.style.left = x + 'px';
+                el.style.top = y + 'px';
+                circleContainer.appendChild(el);
+                memberElements.push({el: el, x: x+20, y: y+20}); // Store center points
+
+                tl.add({
+                    targets: el,
+                    opacity: [0, 1],
+                    scale: [0.5, 1],
+                    duration: 600
+                }, `-=${i === 0 ? 300 : 500}`); // Stagger appearance
+            });
+
+            // Position and show competitor ⚔️ initially outside
+            const competitorStartX = centerX - 100; // To the left of circle
+            const competitorStartY = centerY - 100; // Above circle
+            competitorWrapper.innerHTML = '⚔️';
+            competitorWrapper.style.left = competitorStartX - 20 + 'px';
+            competitorWrapper.style.top = competitorStartY - 20 + 'px';
+            tl.add({
+                targets: competitorWrapper,
+                opacity: [0, 1],
+                scale: [0.5, 1],
+                duration: 600
+            }, '-=300');
+
+            // Attraction: Competitor moves closer to an open spot
+            // Let's find an open spot (e.g., opposite the first member, or just a designated entry point)
+            const entryAngle = ((numMembers + 0.5) / (numMembers + 1)) * 2 * Math.PI; // A new spot
+            const entryX = centerX + radius * Math.cos(entryAngle) - 20;
+            const entryY = centerY + radius * Math.sin(entryAngle) - 20;
+            const competitorNearX = centerX + (radius - 40) * Math.cos(entryAngle) - 20; // Slightly outside
+            const competitorNearY = centerY + (radius - 40) * Math.sin(entryAngle) - 20;
+
+            tl.add({
+                targets: competitorWrapper,
+                left: competitorNearX + 'px',
+                top: competitorNearY + 'px',
+                scale: 1.1, // Slight emphasis
+                duration: 1000,
+                easing: 'easeInOutQuad'
+            }, '+=300');
+
+            // Transformation
+            tl.add({
+                targets: competitorWrapper.firstChild, // The ⚔️ emoji itself
+                opacity: 0,
+                scale: 0.3,
+                duration: 400,
+                easing: 'easeInQuad',
+                complete: function() {
+                    competitorWrapper.innerHTML = '😊'; // Change emoji
+                    // New emoji needs styling if wrapper doesn't cover it
+                    competitorWrapper.firstChild.style.opacity = 0;
+                    competitorWrapper.firstChild.style.transform = 'scale(0.3)';
+                }
+            });
+            tl.add({
+                targets: competitorWrapper.firstChild, // The new 😊 emoji
+                opacity: 1,
+                scale: 1,
+                duration: 400,
+                easing: 'easeOutQuad'
+            });
+
+            // Integration: New member moves into the circle
+            tl.add({
+                targets: competitorWrapper,
+                left: entryX + 'px',
+                top: entryY + 'px',
+                scale: 1, // Back to normal size
+                duration: 800,
+                easing: 'easeOutBounce', // Bouncy entry
+                complete: function() {
+                    memberElements.push({el: competitorWrapper, x: entryX+20, y: entryY+20}); // Add to members
+                }
+            });
+
+            // Animate "你的 '共生圈'." text
+            tl.add({ targets: textYourCircle, opacity: [0,1], translateY:[-10, 0] }, '-=500');
+
+            // Optional: Connect new member to two neighbors
+            tl.add({
+                duration: 500, // Delay before lines draw
+                begin: function() { // Lines need to be created just before animation
+                    // For simplicity, connect to first and last original member
+                    if (memberElements.length > numMembers && numMembers >= 2) {
+                        const newMemberPos = memberElements[numMembers]; // The transformed competitor
+                        const neighbor1Pos = memberElements[0];
+                        const neighbor2Pos = memberElements[numMembers-1];
+
+                        [neighbor1Pos, neighbor2Pos].forEach(neighborPos => {
+                            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                            line.setAttribute('x1', newMemberPos.x);
+                            line.setAttribute('y1', newMemberPos.y);
+                            line.setAttribute('x2', newMemberPos.x); // Start line at new member
+                            line.setAttribute('y2', newMemberPos.y);
+                            linesSvg.appendChild(line);
+                            anime({ // Separate anime call for line drawing after it's added
+                                targets: line,
+                                x2: neighborPos.x,
+                                y2: neighborPos.y,
+                                opacity: [0, 0.7],
+                                duration: 700,
+                                easing: 'easeInOutSine'
+                            });
+                        });
+                    }
+                }
+            });
+
+            // Pulse symbiotic circle border
+            tl.add({
+                targets: symbioticCircleEl,
+                borderColor: ['#a2d2ff', '#4f8dff', '#a2d2ff'], // Pulse color
+                borderWidth: [3, 4, 3], // Pulse width
+                duration: 1200,
+                easing: 'easeInOutSine'
+            }, '-=800');
+
+            // Keep final scene visible
+            tl.add({ duration: 2500 });
+        });
+    </script>
+</body>
+</html>

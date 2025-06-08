@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Subtitle 4-7 Animation</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: sans-serif;
+            background-color: #222; /* Darker background for focus */
+            color: #fff;
+            margin: 0;
+            overflow: hidden;
+        }
+        .main-container {
+            text-align: center;
+            position: relative;
+        }
+        /* Innovator Scene */
+        #innovator-scene {
+            padding: 20px;
+            display: flex; /* For aligning emojis and text */
+            flex-direction: column;
+            align-items: center;
+        }
+        #innovator-emojis {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        #innovator-emoji {
+             display: inline-block;
+        }
+        #gear-emoji {
+            display: inline-block;
+            animation: spin 4s linear infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #text-innovation-focus {
+            font-size: 2em;
+            opacity: 0;
+        }
+        #text-truth-ignored {
+            font-size: 1.5em;
+            color: #FFD700; /* Gold color for emphasis */
+            opacity: 0;
+            position: absolute; /* To show over innovator scene before transition */
+            width: 100%;
+            top: 60%;
+            left: 0;
+        }
+
+        /* Network Scene */
+        #network-scene {
+            display: none; /* Initially hidden */
+            width: 400px; /* Fixed width for positioning */
+            height: 300px; /* Fixed height for positioning */
+            position: relative; /* For node and SVG positioning */
+            /* border: 1px solid #555; */ /* Debugging */
+        }
+        #nodes-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .node {
+            position: absolute;
+            font-size: 2.5em; /* Emoji size */
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            padding: 10px;
+            width: 60px; /* Fixed size for easier calculations */
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+            opacity: 0; /* Initially hidden for animation */
+        }
+        #lines-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0; /* Behind nodes */
+        }
+        #lines-svg line {
+            stroke: #4A90E2; /* Light blue lines */
+            stroke-width: 3;
+        }
+        #text-value-network {
+            font-size: 1.8em; /* Adjusted size */
+            opacity: 0;
+            position: absolute;
+            bottom: -50px; /* Position below network */
+            width: 100%;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div id="innovator-scene">
+            <div id="innovator-emojis">
+                <span id="innovator-emoji">🧑‍💻</span>
+                <span id="gear-emoji">⚙️</span>
+            </div>
+            <p id="text-innovation-focus">闷头搞创新...</p>
+        </div>
+
+        <p id="text-truth-ignored">却忽略了一个真相...</p>
+
+        <div id="network-scene">
+            <div id="nodes-container">
+                <div class="node" id="node1">👤</div>
+                <div class="node" id="node2">🤝</div>
+                <div class="node" id="node3">🏢</div>
+                <div class="node" id="node4">💡</div>
+                <div class="node" id="node5">🌍</div>
+            </div>
+            <svg id="lines-svg"></svg>
+            <p id="text-value-network">商业模式的本质 是设计一套“共生价值网”</p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const innovatorScene = document.getElementById('innovator-scene');
+            const textInnovationFocus = document.getElementById('text-innovation-focus');
+            const innovatorEmoji = document.getElementById('innovator-emoji');
+            const textTruthIgnored = document.getElementById('text-truth-ignored');
+            const networkScene = document.getElementById('network-scene');
+            const nodesContainer = document.getElementById('nodes-container');
+            const nodes = document.querySelectorAll('.node');
+            const linesSvg = document.getElementById('lines-svg');
+            const textValueNetwork = document.getElementById('text-value-network');
+
+            const nodeElements = {
+                node1: document.getElementById('node1'),
+                node2: document.getElementById('node2'),
+                node3: document.getElementById('node3'),
+                node4: document.getElementById('node4'),
+                node5: document.getElementById('node5'),
+            };
+
+            // Define node positions (center of the node)
+            const nodePositions = {
+                node1: { x: 70, y: 70 },
+                node2: { x: 330, y: 70 },
+                node3: { x: 200, y: 150 }, // Center node
+                node4: { x: 70, y: 230 },
+                node5: { x: 330, y: 230 },
+            };
+
+            // Define connections between nodes by ID
+            const connections = [
+                { from: 'node1', to: 'node3' },
+                { from: 'node2', to: 'node3' },
+                { from: 'node4', to: 'node3' },
+                { from: 'node5', to: 'node3' },
+                { from: 'node1', to: 'node4' }, // Extra connections for network feel
+                { from: 'node2', to: 'node5' },
+            ];
+
+            function getNodeCenter(nodeId) {
+                const node = nodeElements[nodeId];
+                // Use pre-defined positions, assuming node size is 60x60, padding 10px
+                // The x,y in nodePositions is the top-left, so center is x+30, y+30
+                return {
+                    x: nodePositions[nodeId].x, // Already center-ish due to fixed size & padding
+                    y: nodePositions[nodeId].y,
+                };
+            }
+
+            nodes.forEach(node => {
+                const pos = nodePositions[node.id];
+                // Set position based on top-left for absolute positioning
+                // Node is 60x60, so subtract 30 to center it on the x,y coordinates
+                node.style.left = (pos.x - 30) + 'px';
+                node.style.top = (pos.y - 30) + 'px';
+            });
+
+
+            const tl = anime.timeline({
+                easing: 'easeOutExpo',
+                duration: 750
+            });
+
+            // Innovator Scene
+            tl.add({
+                targets: textInnovationFocus,
+                opacity: [0, 1],
+                translateY: [20, 0],
+                duration: 1000
+            })
+            .add({
+                targets: innovatorEmoji,
+                scale: [1, 1.1, 1],
+                duration: 1000,
+                easing: 'easeInOutQuad'
+            }, '-=800');
+
+            // Transition
+            tl.add({
+                targets: textTruthIgnored,
+                opacity: [0, 1],
+                translateY: [20, 0],
+                duration: 1000
+            }, '+=500')
+            .add({
+                targets: textTruthIgnored,
+                opacity: 0,
+                translateY: [0, -20],
+                duration: 800,
+                easing: 'easeInExpo'
+            }, '+=1500') // Hold truth text for 1.5s
+            .add({
+                targets: innovatorScene,
+                opacity: 0,
+                duration: 800,
+                easing: 'easeInOutQuad',
+                complete: function() {
+                    innovatorScene.style.display = 'none';
+                    networkScene.style.display = 'block'; // Show before fade in
+                }
+            }, '-=500'); // Overlap fade out of truth text and innovator scene
+
+            // Network Scene
+            tl.add({
+                targets: networkScene, // Fade in the container
+                opacity: [0,1],
+                duration: 500,
+            })
+            .add({
+                targets: '.node', // Animate nodes
+                opacity: [0, 1],
+                scale: [0.5, 1],
+                delay: anime.stagger(200),
+                duration: 800
+            }, '-=200'); // Start slightly after network scene fades in
+
+            // Line Drawing (added dynamically to timeline)
+            connections.forEach((conn, index) => {
+                const p1 = getNodeCenter(conn.from);
+                const p2 = getNodeCenter(conn.to);
+
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', p1.x);
+                line.setAttribute('y1', p1.y);
+                line.setAttribute('x2', p2.x);
+                line.setAttribute('y2', p2.y);
+                linesSvg.appendChild(line);
+
+                const length = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+                line.style.strokeDasharray = length;
+                line.style.strokeDashoffset = length;
+
+                tl.add({
+                    targets: line,
+                    strokeDashoffset: [anime.setDashoffset, 0],
+                    duration: 600,
+                    easing: 'easeInOutSine'
+                }, `-=${index === 0 ? 200 : 400}`); // Stagger line drawing, overlap a bit more for subsequent lines
+            });
+
+            // Text Value Network
+            tl.add({
+                targets: textValueNetwork,
+                opacity: [0, 1],
+                translateY: [20, 0], // Comes from slightly below
+                duration: 1000
+            }, '+=300'); // After lines mostly drawn
+
+        });
+    </script>
+</body>
+</html>

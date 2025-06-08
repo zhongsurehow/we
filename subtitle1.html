@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Subtitle 1 Animation</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: sans-serif;
+            font-size: 3em;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+        }
+        #question-mark {
+            display: inline-block;
+            opacity: 0;
+            transform-origin: center center; /* Ensures scaling and rotation are centered */
+        }
+        #subtitle-text {
+            display: inline-block;
+            opacity: 0;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <span id="question-mark">❓</span>
+        <span id="subtitle-text">你知道吗？</span>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            anime({
+                targets: '#question-mark',
+                scale: [
+                    { value: 0, duration: 0 }, // Start at scale 0
+                    { value: 1.2, duration: 300, easing: 'easeOutQuad' }, // Scale up to 1.2
+                    { value: 1, duration: 200, easing: 'easeInOutQuad' } // Scale down to 1
+                ],
+                opacity: [
+                    { value: 0, duration: 0 }, // Start at opacity 0
+                    { value: 1, duration: 50, easing: 'linear' } // Fade in quickly
+                ],
+                rotate: [
+                    { value: 0, duration: 0 }, // Start at 0 rotation
+                    { value: -15, duration: 150, easing: 'easeOutQuad' },
+                    { value: 10, duration: 150, easing: 'easeInOutQuad' },
+                    { value: 0, duration: 200, easing: 'easeInQuad' }
+                ],
+                duration: 500, // Total duration for the scale/rotate sequence
+                easing: 'linear' // Overall easing for the timeline of keyframes
+            });
+
+            anime({
+                targets: '#subtitle-text',
+                opacity: [0, 1],
+                duration: 500,
+                delay: 350, // Start after the question mark has mostly finished its animation
+                easing: 'easeOutExpo'
+            });
+        });
+    </script>
+</body>
+</html>

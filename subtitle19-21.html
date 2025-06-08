@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Subtitle 19-21 Animation</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: sans-serif;
+            background-color: #2c3e50; /* Dark blue/grey background */
+            color: #ecf0f1;
+            margin: 0;
+            overflow: hidden;
+        }
+        #main-animation-container {
+            position: relative;
+            width: 600px;
+            height: 400px;
+            /* border: 1px dashed #777; */
+        }
+        .scene {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            display: none; /* scenes are hidden by default */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .scene-text {
+            font-size: 1.6em;
+            margin-top: 20px;
+            line-height: 1.4;
+            position: relative; /* Ensure text is above other elements if needed */
+            z-index: 10;
+        }
+
+        /* Solo Effort Scene */
+        #warrior-emoji {
+            font-size: 3em;
+            position: absolute;
+            left: 50px; /* Start position */
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        #wall-element {
+            width: 25px;
+            height: 100px;
+            background-color: #7f8c8d; /* Grey wall */
+            position: absolute;
+            right: 150px; /* Wall position */
+            top: 50%;
+            transform: translateY(-50%);
+            border-radius: 3px;
+        }
+
+        /* Network Art Scene */
+        #network-nodes-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .node {
+            position: absolute; /* Positioned by JS */
+            font-size: 2.5em;
+            opacity: 0; /* Initially hidden */
+            transform: scale(0.5);
+            background-color: rgba(236, 240, 241, 0.1); /* Slight backing for nodes */
+            border-radius: 50%;
+            width: 50px; /* Fixed size for easier glow */
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: none; /* For glow animation */
+        }
+        #network-lines-svg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0; /* Behind nodes but above scene background */
+        }
+        #network-lines-svg path {
+            stroke: #7f8c8d; /* Lighter grey lines */
+            stroke-width: 2px;
+            fill: none;
+        }
+
+        /* Photosynthesis Scene Elements */
+        #photosynthesis-elements-overlay { /* This is not a .scene, but an overlay */
+            position: absolute;
+            top:0; left:0; width:100%; height:100%;
+            display: block; /* Always displayed, opacity controlled */
+            opacity: 0;
+            z-index: 5; /* Above network, below top text */
+        }
+        #sun-emoji {
+            font-size: 4em;
+            position: absolute;
+            top: 20px; /* Position sun at the top */
+            left: 50%;
+            transform: translateX(-50%) scale(0.5);
+            opacity: 0;
+            filter: drop-shadow(0 0 15px #f1c40f); /* Sun glow */
+        }
+        .light-ray {
+            position: absolute;
+            width: 2px; /* Thin rays */
+            height: 0px; /* Animated height */
+            background-image: linear-gradient(to bottom, rgba(241, 196, 15, 0.7), rgba(241, 196, 15, 0));
+            transform-origin: top center;
+            opacity: 0;
+        }
+        .particle { /* For photosynthesis particles */
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background-color: #f1c40f;
+            border-radius: 50%;
+            opacity: 0;
+        }
+        #text-photosynthesis { /* Part of the overlay */
+             color: #f1c40f; /* Golden text */
+        }
+
+    </style>
+</head>
+<body>
+    <div id="main-animation-container">
+        <div class="scene" id="solo-effort-scene">
+            <span class="emoji" id="warrior-emoji">🏃</span>
+            <div id="wall-element"></div>
+            <p class="scene-text" id="text-solo-effort">不是单枪匹马的突围...</p>
+        </div>
+
+        <div class="scene" id="network-art-scene">
+            <div id="network-nodes-container">
+                <!-- Nodes will be added by JS -->
+            </div>
+            <svg id="network-lines-svg"></svg>
+            <p class="scene-text" id="text-network-art">...而是设计 "商业共生网络" 的艺术...</p>
+        </div>
+
+        <!-- Photosynthesis elements are not a "scene" that replaces, but an overlay -->
+        <div id="photosynthesis-elements-overlay">
+            <span class="emoji" id="sun-emoji">☀️</span>
+            <!-- Light rays and particles will be added by JS -->
+            <p class="scene-text" id="text-photosynthesis" style="position:absolute; bottom: 20px; width:100%; text-align:center;">
+                ...让每个参与者<br>都能在你的模式里 "光合作用"！
+            </p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const soloScene = document.getElementById('solo-effort-scene');
+            const warrior = document.getElementById('warrior-emoji');
+            const wall = document.getElementById('wall-element');
+            const networkScene = document.getElementById('network-art-scene');
+            const nodesContainer = document.getElementById('network-nodes-container');
+            const linesSvg = document.getElementById('network-lines-svg');
+            const photoOverlay = document.getElementById('photosynthesis-elements-overlay');
+            const sun = document.getElementById('sun-emoji');
+            const textPhotosynthesis = document.getElementById('text-photosynthesis');
+
+            const sceneDisplayDuration = 2000;
+            const fadeDuration = 500;
+
+            const tl = anime.timeline({
+                easing: 'easeOutExpo',
+            });
+
+            // Function to show a scene
+            function displayScene(sceneEl) {
+                sceneEl.style.display = 'flex';
+                tl.add({ targets: sceneEl, opacity: [0, 1], duration: fadeDuration });
+            }
+            // Function to hide a scene
+            function undisplayScene(sceneEl) {
+                tl.add({ targets: sceneEl, opacity: 0, duration: fadeDuration, delay: sceneDisplayDuration })
+                  .add({ targets: sceneEl, display: 'none', duration:1});
+            }
+
+            // Solo Effort Scene
+            displayScene(soloScene);
+            tl.add({ targets: '#text-solo-effort', opacity: [0,1], translateY: [10,0]}, '-=300');
+            tl.add({
+                targets: warrior,
+                translateX: [0, wall.offsetLeft - warrior.offsetWidth - 10], // Move to wall
+                duration: 1200,
+                easing: 'linear'
+            });
+            tl.add({ // Recoil
+                targets: warrior,
+                translateX: ['-=15', '+=15', '-=10', '+=10', '-=5', '+=5'], // Quick bounce
+                duration: 500,
+                easing: 'easeInOutSine'
+            });
+            undisplayScene(soloScene);
+
+            // Network Art Scene
+            displayScene(networkScene); // This scene stays visible
+            tl.add({ targets: '#text-network-art', opacity: [0,1], translateY: [10,0]}, '-=300');
+
+            const nodeEmojis = ['💡', '🌱', '🤝', '🎨', '🌍'];
+            const nodeElements = [];
+            const nodePositions = [];
+            const radius = 120; // Radius of circle for nodes
+            const centerX = nodesContainer.offsetWidth / 2;
+            const centerY = nodesContainer.offsetHeight / 2 - 20; // Shift up a bit
+
+            nodeEmojis.forEach((emoji, i) => {
+                const angle = (i / nodeEmojis.length) * 2 * Math.PI - (Math.PI / 2); // Start top
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                nodePositions.push({x, y});
+
+                const node = document.createElement('div');
+                node.classList.add('node');
+                node.id = `node-${i}`;
+                node.innerHTML = emoji;
+                node.style.left = (x - 25) + 'px'; // Adjust for node size (50px)
+                node.style.top = (y - 25) + 'px';
+                nodesContainer.appendChild(node);
+                nodeElements.push(node);
+            });
+
+            tl.add({
+                targets: '.node',
+                opacity: [0, 1],
+                scale: [0.5, 1],
+                delay: anime.stagger(200),
+                duration: 800
+            }, '-=500');
+
+            // Draw lines (simple straight lines for conciseness here)
+            for (let i = 0; i < nodePositions.length; i++) {
+                for (let j = i + 1; j < nodePositions.length; j++) {
+                    // Connect only some pairs for a less cluttered look, e.g., adjacent and one across
+                    if (j === (i + 1) % nodePositions.length || j === (i + 2) % nodePositions.length ) {
+                        const p1 = nodePositions[i];
+                        const p2 = nodePositions[j];
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', p1.x); line.setAttribute('y1', p1.y);
+                        line.setAttribute('x2', p1.x); line.setAttribute('y2', p1.y); // Start at p1
+                        line.style.stroke = '#7f8c8d'; line.style.strokeWidth = '2px';
+                        linesSvg.appendChild(line);
+                        tl.add({
+                            targets: line,
+                            x2: p2.x, y2: p2.y,
+                            opacity: [0.3, 0.8], // Make lines somewhat subtle
+                            duration: 600, easing: 'easeInOutSine'
+                        }, `-=${i === 0 && j === 1 ? 300 : 500}`); // Stagger
+                    }
+                }
+            }
+
+            // Photosynthesis Overlay (appears on top of network scene)
+            tl.add({
+                targets: photoOverlay, // Fade in the whole overlay container
+                opacity: [0, 1],
+                duration: fadeDuration
+            }, "+=500"); // After network is somewhat established
+
+            tl.add({
+                targets: sun,
+                opacity: [0, 1],
+                scale: [0.5, 1.2, 1], // Pop in sun
+                duration: 1000,
+                easing: 'easeOutElastic(1, .8)'
+            }, '-=300');
+
+            // Light rays from sun
+            for (let i = 0; i < 8; i++) { // 8 rays
+                const ray = document.createElement('div');
+                ray.classList.add('light-ray');
+                sun.appendChild(ray); // Append to sun for positioning
+                ray.style.transform = `rotate(${i * 45}deg)`;
+                tl.add({
+                    targets: ray,
+                    height: [0, 150], // Animate height
+                    opacity: [0.7, 0], // Fade in then out
+                    duration: 1200,
+                    easing: 'linear'
+                }, `-=${i === 0 ? 800 : 1100 + Math.random()*100}`); // Staggered rays
+            }
+
+            // Glow effect for nodes & particles
+            nodeElements.forEach((node, index) => {
+                tl.add({ // Node glow
+                    targets: node,
+                    boxShadow: [
+                        '0 0 0px rgba(241, 196, 15, 0)',
+                        '0 0 20px 10px rgba(241, 196, 15, 0.7)', // Glow color
+                        '0 0 0px rgba(241, 196, 15, 0)'
+                    ],
+                    duration: 1500,
+                    easing: 'easeInOutSine',
+                    loop: 2 // Glow a couple of times
+                }, `-=1200`);
+
+                // Photosynthesis particles
+                for(let k=0; k<3; k++) { // 3 particles per node
+                    const particle = document.createElement('div');
+                    particle.classList.add('particle');
+                    // Position particle at the node's center initially
+                    particle.style.left = (node.offsetLeft + node.offsetWidth / 2 - 3) + 'px';
+                    particle.style.top = (node.offsetTop + node.offsetHeight / 2 - 3) + 'px';
+                    photoOverlay.appendChild(particle); // Add to overlay to be above lines
+
+                    tl.add({
+                        targets: particle,
+                        translateX: anime.random(-40, 40),
+                        translateY: anime.random(-40, 40),
+                        opacity: [0.8, 0],
+                        scale: [1, 0.3],
+                        duration: anime.random(800, 1200),
+                        easing: 'easeOutCirc'
+                    }, `-=${1400 + k*50}`); // Stagger particles
+                }
+            });
+
+            tl.add({
+                targets: textPhotosynthesis,
+                opacity: [0, 1],
+                translateY: [20, 0], // Come from slightly below
+                duration: 1000
+            }, '-=800'); // While particles are still going
+
+            // Ensure network scene + overlay stays for a bit
+            tl.add({ duration: sceneDisplayDuration + 1000 });
+
+        });
+    </script>
+</body>
+</html>

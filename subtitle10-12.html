@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Subtitle 10-12 Animation</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            overflow: hidden;
+        }
+        #main-container {
+            display: flex;
+            flex-direction: column; /* Stack entity groups row and texts */
+            align-items: center;
+            text-align: center;
+        }
+        #entity-groups-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px; /* Space before title text */
+        }
+        .entity-group {
+            display: flex;
+            flex-direction: column; /* Emoji above label */
+            align-items: center;
+            position: relative; /* For absolute positioning of value-point and question-mark */
+            margin: 0 30px; /* Spacing between groups */
+            padding: 20px;
+            /* background-color: #fff; */
+            /* border-radius: 10px; */
+            /* box-shadow: 0 4px 10px rgba(0,0,0,0.1); */
+            opacity: 0; /* Initially hidden */
+        }
+        .entity-emoji {
+            font-size: 4em; /* Large emoji */
+            margin-bottom: 10px;
+            line-height: 1; /* Prevent extra space from emoji */
+        }
+        .entity-label {
+            font-size: 1.1em;
+            color: #555;
+        }
+        .value-point {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: #FFD700; /* Gold */
+            position: absolute;
+            top: 10px; /* Adjust to be near emoji's top-right */
+            right: 5px; /* Adjust */
+            opacity: 0;
+            transform: scale(0);
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.7);
+        }
+        .question-mark-float {
+            font-size: 1.5em; /* Emoji size for question mark */
+            position: absolute;
+            top: -5px;  /* Position near the value point */
+            right: -15px; /* Position near the value point */
+            opacity: 0;
+            filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+        }
+        #text-value-point-title,
+        #text-question-clarity {
+            font-size: 2.2em;
+            opacity: 0;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        #text-question-clarity {
+            margin-top: 30px;
+            color: #E74C3C; /* Reddish for emphasis */
+        }
+    </style>
+</head>
+<body>
+    <div id="main-container">
+        <div id="entity-groups-row">
+            <div class="entity-group" id="user-group">
+                <span class="entity-emoji">👤</span>
+                <span class="entity-label">用户</span>
+                <div class="value-point"></div>
+                <span class="question-mark-float">❓</span>
+            </div>
+            <div class="entity-group" id="partner-group">
+                <span class="entity-emoji">🤝</span>
+                <span class="entity-label">合作伙伴</span>
+                <div class="value-point"></div>
+                <span class="question-mark-float">❓</span>
+            </div>
+            <div class="entity-group" id="competitor-group">
+                <span class="entity-emoji">⚔️</span>
+                <span class="entity-label">竞争对手</span>
+                <div class="value-point"></div>
+                <span class="question-mark-float">❓</span>
+            </div>
+        </div>
+        <p id="text-value-point-title">“共生价值点”</p>
+        <p id="text-question-clarity">真的清晰吗？</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tl = anime.timeline({
+                easing: 'easeOutExpo', // Default easing for the timeline
+                duration: 750 // Default duration
+            });
+
+            // Introduce Entities
+            tl.add({
+                targets: '.entity-group',
+                opacity: 1,
+                translateY: [-30, 0],
+                delay: anime.stagger(250)
+            });
+
+            // Reveal "共生价值点" Title
+            tl.add({
+                targets: '#text-value-point-title',
+                opacity: 1,
+                scale: [0.7, 1],
+                duration: 800
+            }, '-=300'); // Overlap with previous animation
+
+            // Reveal and Pulse Value Points
+            tl.add({
+                targets: '.value-point',
+                opacity: 1,
+                transform: 'scale(1)',
+                delay: anime.stagger(200, {from: 'first'}),
+                duration: 500
+            }, '-=500');
+
+            // Add pulsing effect to value points (a few pulses, not infinite)
+            document.querySelectorAll('.value-point').forEach(vp => {
+                tl.add({
+                    targets: vp,
+                    scale: [
+                        { value: 1.2, duration: 250 },
+                        { value: 1, duration: 250 },
+                        { value: 1.2, duration: 250 },
+                        { value: 1, duration: 250 }
+                    ],
+                    easing: 'easeInOutSine'
+                }, '-=700'); // Staggered start relative to their appearance
+            });
+
+            // Question Clarity Text
+            tl.add({
+                targets: '#text-question-clarity',
+                opacity: 1,
+                scale: [0.7, 1],
+                duration: 800
+            }, '+=200'); // After value points have pulsed a bit
+
+            // Optional: Flicker Value Points when question appears
+            tl.add({
+                targets: '.value-point',
+                opacity: [
+                    { value: 0.3, duration: 100, delay: anime.stagger(50) },
+                    { value: 1, duration: 100 },
+                    { value: 0.3, duration: 100 },
+                    { value: 1, duration: 100 }
+                ],
+                easing: 'steps(1)' // For sharp flicker
+            }, '-=600');
+
+
+            // Reveal and Bob Question Marks
+            tl.add({
+                targets: '.question-mark-float',
+                opacity: 1,
+                translateY: [-15, 0], // Float in from above
+                delay: anime.stagger(200, {from: 'first'}),
+                duration: 500
+            }, '-=400'); // Overlap with question text
+
+            // Add bobbing animation to question marks (infinite loop)
+            anime({
+                targets: '.question-mark-float',
+                translateY: [
+                    { value: 0, duration: 0, delay: anime.stagger(200) }, // Start at current pos
+                    { value: -4, duration: 600 },
+                    { value: 0, duration: 600 }
+                ],
+                loop: true,
+                direction: 'alternate',
+                easing: 'easeInOutSine',
+                delay: tl.duration - 300 // Attempt to start after they appear in timeline
+            });
+
+        });
+    </script>
+</body>
+</html>

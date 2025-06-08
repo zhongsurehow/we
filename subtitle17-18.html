@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Subtitle 17-18 Animation</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: sans-serif;
+            background-color: #f0f4f8; /* Light neutral background */
+            color: #333;
+            margin: 0;
+            overflow: hidden;
+        }
+        #main-container {
+            text-align: center;
+            position: relative; /* For absolute positioning of warning sign */
+        }
+        #text-intro {
+            font-size: 2em;
+            opacity: 0;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        #comparison-area {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start; /* Align tops of cards */
+            width: 700px; /* Max width for comparison */
+            margin-bottom: 30px;
+        }
+        .side-card {
+            text-align: center;
+            padding: 20px;
+            border: 1px solid #d1d9e0;
+            border-radius: 8px;
+            margin: 10px;
+            flex-basis: 45%; /* Each card takes up 45% */
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            opacity: 0; /* Initially hidden */
+            min-height: 220px; /* Ensure similar height */
+        }
+        .emoji {
+            font-size: 3.5em;
+            display: block; /* Center emoji */
+            margin: 0 auto 10px;
+        }
+        .partner-emoji-instance { /* For individual partner emojis */
+             font-size: 2.5em; display: inline-block; margin: 0 5px;
+        }
+        .side-text {
+            font-size: 1.3em;
+            color: #4A4A4A;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        .money-pile-container {
+            min-height: 60px; /* Space for money to appear */
+            display: flex;
+            flex-wrap: wrap; /* Allow money to wrap */
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+            position: relative; /* For money animations if needed */
+        }
+        .money-instance {
+            font-size: 1.8em;
+            margin: 2px;
+            opacity: 0; /* Start hidden for animation */
+            transform: scale(0.5);
+        }
+        #warning-sign {
+            position: absolute;
+            font-size: 6em;
+            opacity: 0;
+            top: 45%; /* Centered over comparison area */
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            z-index: 100; /* Above other elements */
+            filter: drop-shadow(0 0 10px rgba(255,0,0,0.5));
+        }
+        #text-misconception {
+            font-size: 2em;
+            opacity: 0;
+            color: #D32F2F; /* Warning red color */
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="main-container">
+        <p id="text-intro">你看，这就是...</p>
+        <div id="comparison-area">
+            <div class="side-card" id="self-interest-side">
+                <span class="emoji" id="hoarding-emoji">🐷</span>
+                <div class="money-pile-container" id="money-pile-hoarding">
+                    <!-- Money will be added here by JS -->
+                </div>
+                <p class="side-text" id="text-self-interest">'只算自己的账'</p>
+            </div>
+            <div class="side-card" id="neglected-partners-side">
+                <div id="partner-emojis-container">
+                    <span class="partner-emoji-instance">🤝</span>
+                    <span class="partner-emoji-instance">👥</span>
+                    <span class="partner-emoji-instance">🌿</span>
+                </div>
+                <div class="money-pile-container" id="money-piles-neglected">
+                    <!-- Money will be added/removed here by JS -->
+                </div>
+                <p class="side-text" id="text-symbiotic-neglect">'不算共生的账'</p>
+            </div>
+        </div>
+        <span class="emoji" id="warning-sign">⚠️</span>
+        <p id="text-misconception">的典型误区！</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const textIntro = document.getElementById('text-intro');
+            const selfInterestSide = document.getElementById('self-interest-side');
+            const neglectedPartnersSide = document.getElementById('neglected-partners-side');
+            const hoardingEmoji = document.getElementById('hoarding-emoji');
+            const moneyPileHoarding = document.getElementById('money-pile-hoarding');
+            const partnerEmojisContainer = document.getElementById('partner-emojis-container');
+            const moneyPilesNeglected = document.getElementById('money-piles-neglected');
+            const textSelfInterest = document.getElementById('text-self-interest');
+            const textSymbioticNeglect = document.getElementById('text-symbiotic-neglect');
+            const warningSign = document.getElementById('warning-sign');
+            const textMisconception = document.getElementById('text-misconception');
+
+            const tl = anime.timeline({
+                easing: 'easeOutExpo',
+                duration: 800 // Default duration for most animations
+            });
+
+            tl.add({
+                targets: textIntro,
+                opacity: [0, 1],
+                translateY: [-20, 0],
+                duration: 1000
+            })
+            .add({ // Keep intro text, maybe fade slightly or move up
+                targets: textIntro,
+                opacity: 0.7,
+                translateY: -10, // Move up slightly
+                duration: 500
+            }, '-=300');
+
+            // Self-Interest Side
+            tl.add({
+                targets: selfInterestSide,
+                opacity: [0,1],
+                scale: [0.95, 1]
+            }, '-=500');
+            tl.add({ targets: [hoardingEmoji, textSelfInterest], opacity: [0,1], translateY: [10,0] }, '-=600');
+
+            // Animate money piling up for self-interest
+            for (let i = 0; i < 8; i++) { // Add 8 money bags
+                const money = document.createElement('span');
+                money.classList.add('money-instance');
+                money.textContent = '💰';
+                moneyPileHoarding.appendChild(money);
+                tl.add({
+                    targets: money,
+                    opacity: [0, 1],
+                    scale: [0.5, 1, 0.9, 1], // Pop in effect
+                    translateX: anime.random(-10, 10), // Slight random position
+                    translateY: anime.random(-5, 5),
+                    duration: 300,
+                    easing: 'easeOutBack'
+                }, `-=${i === 0 ? 400 : 250}`); // Staggered appearance
+            }
+
+            // Neglected Partners Side
+            tl.add({
+                targets: neglectedPartnersSide,
+                opacity: [0,1],
+                scale: [0.95, 1]
+            }, '-=2000'); // Start this side earlier than hoarding finishes
+            tl.add({ targets: [partnerEmojisContainer, textSymbioticNeglect], opacity: [0,1], translateY: [10,0] }, '-=600');
+
+            // Initial money for neglected partners
+            const initialNeglectedMoney = [];
+            for (let i = 0; i < 3; i++) {
+                const money = document.createElement('span');
+                money.classList.add('money-instance');
+                money.textContent = '💰';
+                money.style.opacity = 1; // Start visible for this side
+                money.style.transform = 'scale(1)';
+                moneyPilesNeglected.appendChild(money);
+                initialNeglectedMoney.push(money);
+            }
+             // Animate partner emojis looking sad (slight tilt and opacity dip)
+            tl.add({
+                targets: '#partner-emojis-container .partner-emoji-instance',
+                rotate: [0, anime.stagger([-5, 5], {from: 'center'}), 0],
+                opacity: [1, 0.7, 1],
+                delay: anime.stagger(100),
+                duration: 1000
+            }, '-=500');
+            // Animate money shrinking/fading for neglected partners
+            tl.add({
+                targets: initialNeglectedMoney.slice(0,2), // Leave one, or remove all
+                opacity: [1, 0],
+                scale: [1, 0.3],
+                duration: 600,
+                delay: anime.stagger(150, {from: 'last'}),
+                easing: 'easeInBack'
+            }, '-=800'); // Start after partners look sad
+
+
+            // Misconception Text & Warning Sign
+            tl.add({
+                targets: textMisconception,
+                opacity: [0, 1],
+                scale: [0.8, 1],
+                duration: 800
+            }, '+=300'); // After side animations settle
+
+            tl.add({
+                targets: warningSign,
+                opacity: [0, 1],
+                scale: [0.5, 1.1, 1], // Pop and settle
+                duration: 700,
+                easing: 'easeOutElastic(1, .7)'
+            }, '-=500'); // Overlap with text
+
+            // Slight shake for warning sign
+            tl.add({
+                targets: warningSign,
+                translateX: [
+                    { value: 0, duration:0 },
+                    { value: -8, duration: 80 }, { value: 8, duration: 80 },
+                    { value: -5, duration: 60 }, { value: 5, duration: 60 },
+                    { value: 0, duration: 60 }
+                ],
+                easing: 'easeInOutSine'
+            }, '-=300');
+
+        });
+    </script>
+</body>
+</html>

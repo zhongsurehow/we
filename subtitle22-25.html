@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Subtitle 22-25 Animation</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: sans-serif;
+            background-color: #34495e; /* Darker blue background */
+            color: #ecf0f1;
+            margin: 0;
+            overflow: hidden;
+        }
+        #main-stage {
+            position: relative;
+            width: 700px;
+            height: 450px;
+            /* border: 1px dashed #777; */
+        }
+        .scene {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            display: none; /* scenes are hidden by default */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .scene-text {
+            font-size: 1.7em; /* Slightly larger base for scene text */
+            line-height: 1.5;
+            position: relative;
+            z-index: 10;
+        }
+        .emoji { font-size: 3.5em; } /* Base emoji size */
+
+        /* Intro Ask Scene */
+        #thinking-face { transform-origin: bottom center; }
+
+        /* Network Analysis Scene */
+        #network-container {
+            position: relative;
+            width: 400px; /* Area for network */
+            height: 250px;
+            margin-top: 20px; /* Space from text */
+            /* border: 1px solid #555; */
+        }
+        .node {
+            position: absolute; /* Positioned by JS */
+            font-size: 2.8em; /* Node emoji size */
+            opacity: 0;
+            transform: scale(0.5);
+            display: flex; justify-content: center; align-items: center;
+            width: 50px; height: 50px;
+            border-radius: 50%;
+        }
+        #partner-node { /* Special styling for the weak node if needed */
+            /* Example: border: 2px dashed red; */
+        }
+        #network-svg-lines {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            z-index: 0;
+        }
+        #network-svg-lines line {
+            stroke: #7f8c8d; /* Greyish lines */
+            stroke-width: 2.5px;
+        }
+        #text-weak-zone-question { margin-bottom: 10px; }
+
+        /* Overlay Icons & Text */
+        .overlay-icon {
+            position: absolute;
+            font-size: 3em; /* Size for overlay icons */
+            opacity: 0;
+            transform: scale(0.5) translate(-50%, -50%); /* Center on position */
+            z-index: 20;
+        }
+        #text-pain-point, #text-breakthrough-question {
+            position: absolute;
+            width: 100%; /* Full width for centering */
+            text-align: center;
+            font-size: 1.8em;
+            opacity: 0;
+            z-index: 20;
+        }
+        #text-pain-point { bottom: 70px; color: #e74c3c; } /* Red color for pain */
+        #text-breakthrough-question { bottom: 20px; color: #f1c40f; } /* Gold for breakthrough */
+
+        #arrow-path-svg {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            z-index: 15; /* Above network, below top icons */
+            pointer-events: none; /* Allow clicks through */
+        }
+        #arrow-path-svg path {
+            stroke: #f1c40f; /* Gold arrow */
+            stroke-width: 3.5px;
+            fill: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="main-stage">
+        <div class="scene" id="intro-ask-scene">
+            <span class="emoji" id="thinking-face">🤔</span>
+            <p class="scene-text" id="text-ask-yourself">现在问问自己：</p>
+        </div>
+
+        <div class="scene" id="network-analysis-scene">
+            <p class="scene-text" id="text-weak-zone-question">你的商业模式里...<br>谁正处于 '共生弱势区'？</p>
+            <div id="network-container">
+                <div class="node" id="user-node">👤</div>
+                <div class="node" id="company-node">🏢</div>
+                <div class="node" id="idea-node">💡</div>
+                <div class="node" id="partner-node">🤝</div>
+                <svg id="network-svg-lines"></svg>
+            </div>
+        </div>
+
+        <!-- Overlay elements, not part of a specific scene div for positioning freedom -->
+        <span class="emoji overlay-icon" id="pain-icon">💥</span>
+        <p class="scene-text" id="text-pain-point">他们的痛点，</p>
+
+        <span class="emoji overlay-icon" id="key-icon">🔑</span>
+        <svg id="arrow-path-svg">
+             <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#f1c40f"/>
+                </marker>
+            </defs>
+        </svg>
+        <span class="emoji overlay-icon" id="star-icon">✨</span>
+        <p class="scene-text" id="text-breakthrough-question">是不是你创新的突破口？</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const introScene = document.getElementById('intro-ask-scene');
+            const thinkingFace = document.getElementById('thinking-face');
+            const networkScene = document.getElementById('network-analysis-scene');
+            const networkContainer = document.getElementById('network-container');
+            const nodes = {
+                user: document.getElementById('user-node'),
+                company: document.getElementById('company-node'),
+                idea: document.getElementById('idea-node'),
+                partner: document.getElementById('partner-node')
+            };
+            const linesSvg = document.getElementById('network-svg-lines');
+            const painIcon = document.getElementById('pain-icon');
+            const textPainPoint = document.getElementById('text-pain-point');
+            const keyIcon = document.getElementById('key-icon');
+            const arrowSvg = document.getElementById('arrow-path-svg');
+            const starIcon = document.getElementById('star-icon');
+            const textBreakthrough = document.getElementById('text-breakthrough-question');
+
+            const sceneDisplayDuration = 2500;
+            const fadeDuration = 500;
+
+            const tl = anime.timeline({ easing: 'easeOutExpo' });
+
+            function displayScene(sceneEl) {
+                sceneEl.style.display = 'flex';
+                tl.add({ targets: sceneEl, opacity: [0, 1], duration: fadeDuration });
+            }
+            function undisplayScene(sceneEl, delay = sceneDisplayDuration) {
+                tl.add({ targets: sceneEl, opacity: 0, duration: fadeDuration, delay: delay })
+                  .add({ targets: sceneEl, display: 'none', duration: 1 });
+            }
+
+            // Intro Ask Scene
+            displayScene(introScene);
+            tl.add({ targets: '#text-ask-yourself', opacity: [0,1], translateY: [10,0] }, '-=300');
+            tl.add({
+                targets: thinkingFace,
+                rotate: [-10, 10, -5, 5, 0],
+                scale: [1, 1.1, 1],
+                duration: 1000
+            }, '-=800');
+            undisplayScene(introScene);
+
+            // Network Analysis Scene
+            displayScene(networkScene);
+            tl.add({ targets: '#text-weak-zone-question', opacity: [0,1], translateY: [10,0] }, '-=300');
+
+            const nodePositions = { // Relative to networkContainer
+                user: { x: 50, y: 50 }, company: { x: 350, y: 50 },
+                idea: { x: 200, y: 125 }, partner: { x: 200, y: 200 }
+            };
+            Object.keys(nodes).forEach(key => {
+                nodes[key].style.left = (nodePositions[key].x - 25) + 'px';
+                nodes[key].style.top = (nodePositions[key].y - 25) + 'px';
+            });
+            tl.add({
+                targets: '.node', opacity: [0,1], scale: [0.5,1], delay: anime.stagger(150)
+            }, '-=300');
+
+            // Draw lines
+            const connections = [ // Connect most to idea, partner connects to company
+                {from: 'user', to: 'idea'}, {from: 'company', to: 'idea'},
+                {from: 'partner', to: 'company'}, {from: 'idea', to: 'partner'}
+            ];
+            connections.forEach(conn => {
+                const p1 = nodePositions[conn.from]; const p2 = nodePositions[conn.to];
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', p1.x); line.setAttribute('y1', p1.y);
+                line.setAttribute('x2', p1.x); line.setAttribute('y2', p1.y);
+                linesSvg.appendChild(line);
+                tl.add({ targets: line, x2: p2.x, y2: p2.y, opacity: [0,1], duration: 400}, '-=200');
+            });
+
+            // Highlight weak partner node
+            tl.add({
+                targets: nodes.partner,
+                opacity: [1, 0.6, 1, 0.6], // Flickering opacity
+                scale: [1, 0.9, 1, 0.9],   // Pulsing scale
+                borderColor: ['transparent', '#e74c3c', 'transparent'], // Red border flash
+                borderWidth: [0, 2, 0],
+                duration: 1500,
+                loop: true,
+                easing: 'easeInOutSine'
+            }, '-=500'); // Start a bit after nodes appear
+            // Add a persistent visual indicator for weakness
+            nodes.partner.style.filter = 'grayscale(50%)';
+
+
+            // Pain Point
+            const partnerRect = nodes.partner.getBoundingClientRect();
+            const stageRect = document.getElementById('main-stage').getBoundingClientRect();
+            const painIconX = partnerRect.left - stageRect.left + partnerRect.width / 2;
+            const painIconY = partnerRect.top - stageRect.top + partnerRect.height / 2;
+            painIcon.style.left = painIconX + 'px';
+            painIcon.style.top = painIconY + 'px';
+
+            tl.add({ targets: painIcon, opacity: [0,1], scale: [0.5, 1.2, 1], duration: 600}, '+=1000'); // Wait for weak node anim
+            tl.add({ targets: textPainPoint, opacity: [0,1], translateY: [10,0]}, '-=400');
+
+            // Breakthrough
+            const keyIconX = painIconX + 40; // Offset key from pain
+            const keyIconY = painIconY - 40;
+            keyIcon.style.left = keyIconX + 'px';
+            keyIcon.style.top = keyIconY + 'px';
+
+            const starIconX = keyIconX + 150; // Star further along arrow
+            const starIconY = keyIconY - 50;
+            starIcon.style.left = starIconX + 'px';
+            starIcon.style.top = starIconY + 'px';
+
+            tl.add({ targets: keyIcon, opacity: [0,1], scale: [0.5, 1], rotate: [-15,0], duration: 600}, '+=500');
+
+            // Arrow
+            const arrowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            // Simple quadratic curve: M startX startY Q controlX controlY endX endY
+            const arrowD = `M ${keyIconX} ${keyIconY} Q ${keyIconX + 75} ${keyIconY + 25} ${starIconX-10} ${starIconY}`;
+            arrowPath.setAttribute('d', arrowD);
+            arrowPath.setAttribute('marker-end', 'url(#arrowhead)');
+            arrowSvg.appendChild(arrowPath);
+            const length = anime.setDashoffset(arrowPath); // Get path length
+            arrowPath.style.strokeDasharray = length;
+            arrowPath.style.strokeDashoffset = length;
+
+            tl.add({
+                targets: arrowPath,
+                strokeDashoffset: [length, 0],
+                duration: 1000,
+                easing: 'easeInOutSine'
+            }, '-=300');
+
+            tl.add({ targets: starIcon, opacity: [0,1], scale: [0.5, 1.3, 1], duration: 700}, '-=200');
+            tl.add({ targets: textBreakthrough, opacity: [0,1], translateY: [10,0]}, '-=500');
+
+            // Keep final scene visible
+             tl.add({ duration: sceneDisplayDuration + 2000 });
+        });
+    </script>
+</body>
+</html>

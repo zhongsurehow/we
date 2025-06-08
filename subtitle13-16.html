@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Subtitle 13-16 Animation</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column; /* Stack intro and stage */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: sans-serif;
+            background-color: #e8eff1; /* Light, neutral background */
+            color: #333;
+            margin: 0;
+            overflow: hidden;
+        }
+        #text-intro {
+            font-size: 2.2em;
+            opacity: 0;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        #animation-stage {
+            position: relative;
+            width: 600px; /* Fixed width for scene layout */
+            height: 300px; /* Fixed height */
+            /* border: 1px dashed #ccc; */ /* For debugging */
+        }
+        .scene {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            display: none; /* Controlled by JS */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-sizing: border-box;
+            padding: 20px;
+        }
+        .scene-text {
+            font-size: 1.5em;
+            margin-top: 20px;
+            line-height: 1.4;
+        }
+        .emoji {
+            font-size: 4em; /* Base emoji size */
+            display: inline-block;
+        }
+
+        /* Scene 1: Tech Investment */
+        #tech-symbols-container {
+            position: relative; /* For absolute positioning of tech symbols */
+            width: 150px;
+            height: 80px; /* Space for symbols to animate from */
+            margin-top: -20px; /* Pull closer to car if needed */
+        }
+        .tech-symbol {
+            position: absolute;
+            font-size: 2.5em;
+            opacity: 0;
+        }
+        #symbol1 { top: 0; left: 10%; }
+        #symbol2 { top: 20%; left: 70%; }
+        #symbol3 { top: 50%; left: 30%; }
+
+        /* Scene 2: Profit Squeeze */
+        #profit-squeeze-scene .emoji-group { display: flex; align-items: center; }
+        #money-emoji { font-size: 3em; margin-left: 15px; }
+
+        /* Scene 3: User Difficulty */
+        #user-difficulty-scene .emoji-group { position: relative; display:inline-flex; align-items:center;}
+        #plug-emoji-broken { margin-left: 15px; }
+        #cross-mark {
+            position: absolute;
+            color: red;
+            font-size: 3em; /* Relative to parent emoji group */
+            opacity: 0;
+            right: -5px; /* Position over the plug */
+            top: 50%;
+            transform: translateY(-50%) scale(0.5);
+        }
+
+        /* Scene 4: Chain Collapse */
+        #chain-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .chain-link {
+            font-size: 2.5em;
+            margin: 0 -2px; /* Overlap slightly for linked effect */
+            transition: all 0.3s ease; /* For smooth break */
+        }
+    </style>
+</head>
+<body>
+    <p id="text-intro">举个例子...</p>
+    <div id="animation-stage">
+        <div class="scene" id="tech-investment-scene">
+            <span class="emoji" id="car-emoji">🚗</span>
+            <div id="tech-symbols-container">
+                <span class="tech-symbol" id="symbol1">⚡️</span>
+                <span class="tech-symbol" id="symbol2">💡</span>
+                <span class="tech-symbol" id="symbol3">⚙️</span>
+            </div>
+            <p class="scene-text">某新能源车企早期狂砸技术...</p>
+        </div>
+
+        <div class="scene" id="profit-squeeze-scene">
+            <div class="emoji-group">
+                <span class="emoji" id="plug-emoji">🔌</span>
+                <span class="emoji" id="money-emoji">💰</span>
+            </div>
+            <p class="scene-text">...却没给充电桩运营商<br>留够利润空间...</p>
+        </div>
+
+        <div class="scene" id="user-difficulty-scene">
+             <div class="emoji-group">
+                <span class="emoji" id="user-emoji">😩</span>
+                <span class="emoji" id="plug-emoji-broken">🔌</span>
+                <span class="emoji" id="cross-mark">❌</span>
+            </div>
+            <p class="scene-text">...结果用户充电难...</p>
+        </div>
+
+        <div class="scene" id="chain-collapse-scene">
+            <div id="chain-container">
+                <span class="chain-link">🔗</span>
+                <span class="chain-link">🔗</span>
+                <span class="chain-link" id="middle-link1">🔗</span>
+                <span class="chain-link" id="middle-link2">🔗</span>
+                <span class="chain-link">🔗</span>
+                <span class="chain-link">🔗</span>
+            </div>
+            <p class="scene-text">...产业链<span id="text-beng">崩</span>了一半！</p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const introText = document.getElementById('text-intro');
+            const stage = document.getElementById('animation-stage');
+            const scenes = {
+                tech: document.getElementById('tech-investment-scene'),
+                profit: document.getElementById('profit-squeeze-scene'),
+                user: document.getElementById('user-difficulty-scene'),
+                chain: document.getElementById('chain-collapse-scene')
+            };
+            const carEmoji = document.getElementById('car-emoji');
+            const moneyEmoji = document.getElementById('money-emoji');
+            const crossMark = document.getElementById('cross-mark');
+            const chainLinks = document.querySelectorAll('#chain-collapse-scene .chain-link');
+            const textBeng = document.getElementById('text-beng');
+
+            const sceneDuration = 2500; // Duration each scene is visible
+            const fadeDuration = 500;  // Fade in/out duration
+
+            const tl = anime.timeline({
+                easing: 'easeOutExpo',
+                duration: fadeDuration // Default fade duration
+            });
+
+            // Function to show a scene
+            function showScene(sceneElement) {
+                sceneElement.style.display = 'flex'; // Use flex for centering
+                tl.add({
+                    targets: sceneElement,
+                    opacity: [0, 1]
+                });
+            }
+
+            // Function to hide a scene
+            function hideScene(sceneElement) {
+                tl.add({
+                    targets: sceneElement,
+                    opacity: [1, 0],
+                    delay: sceneDuration - fadeDuration * 2 // Time scene is visible
+                }, `+=${sceneDuration - fadeDuration*2}`) // Ensure this is relative to previous animation completion
+                .add({
+                    targets: sceneElement,
+                    display: 'none',
+                    duration: 1 // Almost instant, just for cleanup
+                });
+            }
+
+            // Intro Text
+            tl.add({ targets: introText, opacity: [0, 1], duration: 1000 })
+              .add({ targets: introText, opacity: [1, 0], duration: 500, delay: 800 });
+
+            // Scene 1: Tech Investment
+            showScene(scenes.tech);
+            tl.add({ targets: '#tech-investment-scene .scene-text', opacity: [0,1], translateY: [10,0]}, '-=300')
+              .add({ targets: carEmoji, scale: [0.8, 1]}, '-=500');
+            tl.add({
+                targets: '.tech-symbol',
+                opacity: [0,1],
+                translateX: [anime.stagger(30, {start: -50}), 0], // from random x
+                translateY: [anime.stagger(20, {start: -30}), 0], // from random y
+                scale: [0, 1, 0.5, 0], // Appear, then shrink as if absorbed by car
+                delay: anime.stagger(200),
+                duration: 1000
+            }, '-=300');
+            hideScene(scenes.tech);
+
+            // Scene 2: Profit Squeeze
+            showScene(scenes.profit);
+            tl.add({ targets: '#profit-squeeze-scene .scene-text', opacity: [0,1], translateY: [10,0]}, '-=300');
+            tl.add({ targets: '#plug-emoji', scale: [0.8, 1]}, '-=500');
+            tl.add({
+                targets: moneyEmoji,
+                translateY: [0, 80], // Fall down
+                opacity: [1, 0],
+                scale: [1, 0.5],
+                rotate: anime.stagger([-30, 30]), // Tumble
+                duration: 1000,
+                easing: 'easeInBack'
+            }, '-=300');
+            hideScene(scenes.profit);
+
+            // Scene 3: User Difficulty
+            showScene(scenes.user);
+            tl.add({ targets: '#user-difficulty-scene .scene-text', opacity: [0,1], translateY: [10,0]}, '-=300');
+            tl.add({ targets: '#user-emoji', scale: [0.8, 1]}, '-=500');
+            tl.add({ targets: '#plug-emoji-broken', scale: [0.8, 1]}, '-=500');
+            tl.add({
+                targets: crossMark,
+                opacity: [0, 1],
+                scale: [0.5, 1.2, 1], // Pop effect
+                duration: 500,
+                easing: 'easeOutElastic(1, .8)'
+            }, '-=200');
+            hideScene(scenes.user);
+
+            // Scene 4: Chain Collapse
+            showScene(scenes.chain);
+            tl.add({ targets: '#chain-collapse-scene .scene-text', opacity: [0,1], translateY: [10,0]}, '-=300');
+            tl.add({
+                targets: ['#middle-link1', '#middle-link2'], // Middle links
+                translateY: [0, 30],
+                rotate: [0, anime.stagger([-20, 20])],
+                opacity: [1, 0],
+                delay: anime.stagger(150),
+                duration: 800,
+                easing: 'easeInBack'
+            }, '-=200');
+             // Simple "崩" animation: quick scale and color flash
+            tl.add({
+                targets: textBeng,
+                scale: [1, 1.5, 1],
+                color: ['#333', '#ff0000', '#333'],
+                duration: 500,
+                easing: 'easeInOutQuad'
+            }, '-=600');
+            // Keep this scene visible a bit longer at the end
+            tl.add({
+                targets: scenes.chain,
+                opacity: 1, // ensure it stays visible
+                delay: sceneDuration // keep it visible
+            });
+        });
+    </script>
+</body>
+</html>

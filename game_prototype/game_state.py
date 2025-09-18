@@ -1,6 +1,9 @@
 from enum import Enum
 from typing import Optional
 
+# Game constants
+HAND_LIMIT = 6
+
 # Using forward declaration for type hints
 class GuaCard:
     pass
@@ -10,6 +13,7 @@ class Zone(Enum):
     DI = "地"
     REN = "人"
     TIAN = "天"
+    TAIJI = "太极"
 
 class Avatar:
     """Represents a player's Avatar with unique abilities."""
@@ -25,6 +29,7 @@ class Player:
         self.avatar = avatar
         self.dao_xing: int = 0
         self.cheng_yi: int = 0
+        self.qi: int = 0 # 阴阳之气 (Qi)
         self.hand: list[GuaCard] = []
         self.position: Zone = Zone.DI
         self.influence_markers: int = 15 # Example starting amount
@@ -32,17 +37,27 @@ class Player:
 
 class GameBoard:
     """Represents the state of the game board."""
-    def __init__(self):
+    def __init__(self, num_players: int):
+        # Per the rules, the zone limit depends on the number of players.
+        if num_players == 2:
+            limit = 5
+        elif num_players == 3:
+            limit = 6
+        elif num_players >= 4:
+            limit = 7
+        else:
+            limit = 5 # Default for safety
+
         # 8 Gua zones: 乾, 坤, 震, 巽, 坎, 离, 艮, 兑
         self.gua_zones = {
-            "乾": {"markers": {}, "controller": None, "limit": 4},
-            "坤": {"markers": {}, "controller": None, "limit": 4},
-            "震": {"markers": {}, "controller": None, "limit": 4},
-            "巽": {"markers": {}, "controller": None, "limit": 4},
-            "坎": {"markers": {}, "controller": None, "limit": 4},
-            "离": {"markers": {}, "controller": None, "limit": 4},
-            "艮": {"markers": {}, "controller": None, "limit": 4},
-            "兑": {"markers": {}, "controller": None, "limit": 4},
+            "乾": {"markers": {}, "controller": None, "limit": limit},
+            "坤": {"markers": {}, "controller": None, "limit": limit},
+            "震": {"markers": {}, "controller": None, "limit": limit},
+            "巽": {"markers": {}, "controller": None, "limit": limit},
+            "坎": {"markers": {}, "controller": None, "limit": limit},
+            "离": {"markers": {}, "controller": None, "limit": limit},
+            "艮": {"markers": {}, "controller": None, "limit": limit},
+            "兑": {"markers": {}, "controller": None, "limit": limit},
         }
         # Player positions on the board
         self.player_positions = {} # {player_name: Zone}
@@ -50,7 +65,7 @@ class GameBoard:
 class GameState:
     """Represents the entire state of the game."""
     def __init__(self, players: list[Player]):
-        self.board = GameBoard()
+        self.board = GameBoard(num_players=len(players))
         self.players = players
         self.current_player_index = 0
         self.turn = 1
@@ -67,8 +82,8 @@ class GameState:
         output = f"--- Turn {self.turn}: Player {player.name}'s Turn ({player.avatar.name}) ---\n"
         for p in self.players:
             output += (
-                f"  Player {p.name} | Position: {p.position.value}, "
-                f"道行(Dao Xing): {p.dao_xing}, 诚意(Cheng Yi): {p.cheng_yi}, "
+                f"  Player {p.name} | Pos: {p.position.value}, "
+                f"气: {p.qi}, 道行: {p.dao_xing}, 诚意: {p.cheng_yi}, "
                 f"Hand: {len(p.hand)} cards\n"
             )
         output += "Board State:\n"

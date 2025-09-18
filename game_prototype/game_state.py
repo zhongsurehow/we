@@ -1,12 +1,23 @@
-from enum import Enum
+from enum import Enum, auto
 from typing import Optional
 
-# Game constants
-HAND_LIMIT = 6
+from game_prototype.card_base import GuaCard
 
-# Using forward declaration for type hints
-class GuaCard:
-    pass
+# --- Core Enums ---
+# Defining these here avoids circular dependencies.
+class AvatarName(Enum):
+    EMPEROR = "帝王"
+    HERMIT = "隐士"
+
+class BonusType(Enum):
+    EXTRA_AP = auto()
+    EXTRA_QI = auto()
+    DRAW_CARD = auto()
+    HAND_LIMIT = auto()
+    EXTRA_INFLUENCE = auto()
+    FREE_STUDY = auto()
+    QI_DISCOUNT = auto()
+    DAO_XING_ON_TASK = auto()
 
 class Zone(Enum):
     """Enumeration for the board zones."""
@@ -15,9 +26,10 @@ class Zone(Enum):
     TIAN = "天"
     TAIJI = "太极"
 
+# --- Core Data Classes ---
 class Avatar:
     """Represents a player's Avatar with unique abilities."""
-    def __init__(self, name: str, description: str, ability_description: str):
+    def __init__(self, name: AvatarName, description: str, ability_description: str):
         self.name = name
         self.description = description
         self.ability_description = ability_description
@@ -29,38 +41,27 @@ class Player:
         self.avatar = avatar
         self.dao_xing: int = 0
         self.cheng_yi: int = 0
-        self.qi: int = 0 # 阴阳之气 (Qi)
+        self.qi: int = 0
         self.hand: list[GuaCard] = []
         self.position: Zone = Zone.DI
-        self.influence_markers: int = 15 # Example starting amount
+        self.influence_markers: int = 15
         self.current_task_card: Optional[GuaCard] = None
+        self.placed_influence_this_turn: bool = False
 
 class GameBoard:
     """Represents the state of the game board."""
     def __init__(self, num_players: int):
-        # Per the rules, the zone limit depends on the number of players.
-        if num_players == 2:
-            limit = 5
-        elif num_players == 3:
-            limit = 6
-        elif num_players >= 4:
-            limit = 7
-        else:
-            limit = 5 # Default for safety
-
-        # 8 Gua zones: 乾, 坤, 震, 巽, 坎, 离, 艮, 兑
+        if num_players == 2: limit = 5
+        elif num_players == 3: limit = 6
+        else: limit = 7
+        self.base_limit = limit
         self.gua_zones = {
-            "乾": {"markers": {}, "controller": None, "limit": limit},
-            "坤": {"markers": {}, "controller": None, "limit": limit},
-            "震": {"markers": {}, "controller": None, "limit": limit},
-            "巽": {"markers": {}, "controller": None, "limit": limit},
-            "坎": {"markers": {}, "controller": None, "limit": limit},
-            "离": {"markers": {}, "controller": None, "limit": limit},
-            "艮": {"markers": {}, "controller": None, "limit": limit},
-            "兑": {"markers": {}, "controller": None, "limit": limit},
+            "乾": {"markers": {}, "controller": None}, "坤": {"markers": {}, "controller": None},
+            "震": {"markers": {}, "controller": None}, "巽": {"markers": {}, "controller": None},
+            "坎": {"markers": {}, "controller": None}, "离": {"markers": {}, "controller": None},
+            "艮": {"markers": {}, "controller": None}, "兑": {"markers": {}, "controller": None},
         }
-        # Player positions on the board
-        self.player_positions = {} # {player_name: Zone}
+        self.player_positions = {}
 
 class GameState:
     """Represents the entire state of the game."""
@@ -69,7 +70,7 @@ class GameState:
         self.players = players
         self.current_player_index = 0
         self.turn = 1
-        # Initialize player positions
+        self.current_tian_shi = None # The active Tian Shi card for the round
         for player in self.players:
             self.board.player_positions[player.name] = player.position
 
@@ -77,9 +78,9 @@ class GameState:
         return self.players[self.current_player_index]
 
     def __str__(self):
-        """A simple string representation of the game state."""
+        # ... (string representation logic)
         player = self.get_current_player()
-        output = f"--- Turn {self.turn}: Player {player.name}'s Turn ({player.avatar.name}) ---\n"
+        output = f"--- Turn {self.turn}: Player {player.name}'s Turn ({player.avatar.name.value}) ---\n"
         for p in self.players:
             output += (
                 f"  Player {p.name} | Pos: {p.position.value}, "

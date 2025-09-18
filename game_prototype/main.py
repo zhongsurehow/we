@@ -26,6 +26,8 @@ def get_valid_actions(game_state: GameState, player: Player, ap: int, player_bon
         if player.avatar.name == AvatarName.EMPEROR:
              valid_actions[action_num] = {"action": "empower_prompt", "cost": 1, "args": (), "desc": "Empower (Use 王权)"}
              action_num += 1
+        valid_actions[action_num] = {"action": "combo_prompt", "cost": 1, "args": (), "desc": "Activate Combo (e.g., 山泽通气)"}
+        action_num += 1
 
     # --- Free Actions ---
     if not task_completed and player.current_task_card:
@@ -37,6 +39,11 @@ def get_valid_actions(game_state: GameState, player: Player, ap: int, player_bon
 
     if BonusType.FREE_STUDY in player_bonuses and not free_study_used:
         valid_actions[action_num] = {"action": actions.study, "cost": 0, "args": (game_state,), "desc": "Free Study (巽 Bonus)"}
+        action_num += 1
+
+    # Add ask_heart as a free action if player has sincerity
+    if player.cheng_yi > 0:
+        valid_actions[action_num] = {"action": actions.ask_heart, "cost": 0, "args": (game_state,), "desc": "Ask Heart (Spend 1 诚意 to redraw hand)"}
         action_num += 1
 
     valid_actions[action_num] = {"action": "pass", "cost": 0, "args": (), "desc": "Pass Action Phase"}
@@ -75,6 +82,10 @@ def main_game_loop():
                 elif action_func == "empower_prompt":
                     zone = input("Which zone to empower?> ")
                     if actions.empower(game_state, zone, player_bonuses): ap -= cost
+                elif action_func == "combo_prompt":
+                    combo_name = input("Which combo to activate? (e.g., 山泽通气)> ")
+                    target_name = input(f"Target which player for {combo_name}?> ")
+                    if actions.activate_combo(game_state, combo_name, target_name): ap -= cost
                 else:
                     # Prepend game_state to args for action functions
                     full_args = (game_state,) + args if not isinstance(args, tuple) or args[0] != game_state else args

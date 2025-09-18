@@ -78,21 +78,29 @@ class GameState:
         return self.players[self.current_player_index]
 
     def __str__(self):
-        # ... (string representation logic)
+        """Creates a detailed, user-friendly string representation of the game state."""
         player = self.get_current_player()
-        output = f"--- Turn {self.turn}: Player {player.name}'s Turn ({player.avatar.name.value}) ---\n"
+        output = f"--- Turn {self.turn}: {player.name}'s Turn ({player.avatar.name.value}) ---\n"
+
+        # Player Status
+        output += "--- Player Status ---\n"
         for p in self.players:
             output += (
-                f"  Player {p.name} | Pos: {p.position.value}, "
-                f"气: {p.qi}, 道行: {p.dao_xing}, 诚意: {p.cheng_yi}, "
-                f"Hand: {len(p.hand)} cards\n"
+                f"  {p.name:<10} | Pos: {p.position.value:<2} | "
+                f"气: {p.qi:<3} | 道行: {p.dao_xing:<3} | 诚意: {p.cheng_yi:<3} | "
+                f"Hand: {len(p.hand)}\n"
             )
-        output += "Board State:\n"
-        for zone, data in self.board.gua_zones.items():
+
+        # Board State
+        output += "--- Board State ---\n"
+        gua_zones = self.board.gua_zones
+        for zone_name, data in gua_zones.items():
+            line = f"  【{zone_name}】: "
             if data['controller']:
-                output += f"  {zone} Zone: Controlled by {data['controller'].name}\n"
+                line += f"Controlled by {data['controller'].name}"
             else:
-                markers_str = ", ".join(f"{player_name}: {count}" for player_name, count in data['markers'].items())
-                if markers_str:
-                    output += f"  {zone} Zone: Influence -> {markers_str}\n"
+                markers_str = ", ".join(f"{name}: {count}" for name, count in data['markers'].items())
+                line += f"Influence -> {markers_str if markers_str else 'Empty'}"
+            output += line + "\n"
+
         return output

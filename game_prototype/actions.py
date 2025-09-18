@@ -141,3 +141,45 @@ def empower(game_state: GameState, zone_name: str, player_bonuses: list) -> bool
     print(f"{player.name} uses 王权 in {zone_name}, spending {cost} Qi to add 1 influence.")
     check_zone_control(game_state, zone_name)
     return True
+
+def activate_combo(game_state: GameState, combo_name: str, target_player_name: str = None) -> bool:
+    """Allows a player to activate a Hexagram Combination bonus."""
+    player = game_state.get_current_player()
+    controlled_zones = [z for z, d in game_state.board.gua_zones.items() if d.get("controller") == player]
+
+    if combo_name == "山泽通气":
+        if "艮" in controlled_zones and "兑" in controlled_zones:
+            target_player = next((p for p in game_state.players if p.name == target_player_name), None)
+            if not target_player or target_player == player:
+                print("Invalid target player for 山泽通气.")
+                return False
+
+            player.dao_xing += 3
+            player.cheng_yi += 1
+            target_player.dao_xing += 3
+            target_player.cheng_yi += 1
+            print(f"{player.name} activates 山泽通气 with {target_player.name}! You both gain 3 道行 and 1 诚意.")
+            # In a real game, this might be a one-time use. For now, it's repeatable.
+            return True
+
+    print(f"Cannot activate combo: {combo_name}. Conditions not met.")
+    return False
+
+def ask_heart(game_state: GameState) -> bool:
+    """Allows a player to spend 1 Sincerity to redraw their hand (问心)."""
+    player = game_state.get_current_player()
+
+    if player.cheng_yi < 1:
+        print("Not enough 诚意 to perform 问心.")
+        return False
+
+    player.cheng_yi -= 1
+    hand_size = len(player.hand)
+    player.hand.clear()
+
+    # Draw new cards
+    for _ in range(hand_size):
+        player.hand.append(QIAN_WEI_TIAN) # Draw test cards
+
+    print(f"{player.name} spends 1 诚意 to perform 问心, redrawing {hand_size} cards.")
+    return True

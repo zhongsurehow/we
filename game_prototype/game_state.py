@@ -26,6 +26,20 @@ class Zone(Enum):
     TIAN = "天"
     TAIJI = "太极"
 
+from dataclasses import dataclass, field
+
+@dataclass
+class Modifiers:
+    """A data class to hold all temporary modifications for a player's turn."""
+    qi_discount: int = 0
+    extra_ap: int = 0
+    extra_influence: int = 0
+    extra_dao_xing_on_task: int = 0
+    cards_to_draw_on_study: int = 2
+    has_free_study: bool = False
+    hand_limit_bonus: int = 0
+    empower_cost_increase: int = 0
+
 # --- Core Data Classes ---
 class Avatar:
     """Represents a player's Avatar with unique abilities."""
@@ -47,6 +61,7 @@ class Player:
         self.influence_markers: int = 15
         self.current_task_card: Optional[GuaCard] = None
         self.placed_influence_this_turn: bool = False
+        self.destiny_chart: list = [] # List of Tian Shi cards
 
 class GameBoard:
     """Represents the state of the game board."""

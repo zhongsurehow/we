@@ -1,4 +1,5 @@
 from game_prototype.game_state import Avatar, AvatarName, BonusType
+from game_prototype.card_base import YaoCiTask
 
 # This file centralizes game data for easy modification and collaboration.
 
@@ -35,3 +36,10 @@ GAME_DECK = ALL_CARDS
 
 # For testing purposes, we provide easy access to a specific card.
 QIAN_WEI_TIAN = ALL_CARDS[0]
+
+# --- Generic Task Pool for "Scry" Action ---
+GENERIC_YAO_CI_POOL = [
+    YaoCiTask(level='地', name='【衍化】地脉震动', description='Gain 2 阴阳之气.', reward_dao_xing=0, reward_cheng_yi=0),
+    YaoCiTask(level='人', name='【衍化】人潮熙攘', description='Draw 1 card.', reward_dao_xing=0, reward_cheng_yi=0),
+    YaoCiTask(level='天', name='【衍化】天星闪耀', description='Gain 2 道行.', reward_dao_xing=0, reward_cheng_yi=0),
+]
